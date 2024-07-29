@@ -1,0 +1,103 @@
+addict==2.4.0
+aliyun-python-sdk-core==2.13.36
+aliyun-python-sdk-kms==2.16.1
+beautifulsoup4==4.12.2
+blinker @ file:///home/conda/feedstock_root/build_artifacts/blinker_1715091184126/work
+certifi==2023.7.22
+cffi==1.15.1
+charset-normalizer==3.2.0
+click @ file:///D:/bld/click_1692312014553/work
+colorama @ file:///home/conda/feedstock_root/build_artifacts/colorama_1666700638685/work
+coloredlogs==15.0.1
+contourpy==1.1.0
+crcmod==1.7
+cryptography==41.0.3
+cycler==0.11.0
+filelock==3.12.4
+Flask @ file:///home/conda/feedstock_root/build_artifacts/flask_1712667726126/work
+flatbuffers==23.5.26
+fonttools==4.42.1
+gdown==4.7.1
+humanfriendly==10.0
+idna==3.4
+imageio==2.31.6
+imgviz==1.7.4
+importlib-metadata==6.8.0
+importlib-resources==6.0.1
+itsdangerous @ file:///home/conda/feedstock_root/build_artifacts/itsdangerous_1713372668944/work
+Jinja2 @ file:///home/conda/feedstock_root/build_artifacts/jinja2_1715127149914/work
+jmespath==0.10.0
+joblib==1.3.2
+kiwisolver==1.4.4
+labelme==5.3.1
+lazy_loader==0.3
+Markdown==3.4.4
+markdown-it-py==3.0.0
+MarkupSafe @ file:///D:/bld/markupsafe_1706900107493/work
+matplotlib==3.7.2
+mdurl==0.1.2
+mmcv-full==1.6.0
+# Editable install with no version control (mmdet==2.25.0)
+-e c:\programdata\anaconda3\envs\mmcvtest\lib\site-packages\mmdet-2.25.0-py3.8.egg
+mmengine==0.8.4
+model-index==0.1.11
+mpmath==1.3.0
+natsort==8.4.0
+networkx==3.1
+ninja==1.11.1
+numpy==1.24.4
+onnxruntime==1.16.1
+opencv-python==4.6.0.66
+opendatalab==0.0.10
+openmim==0.3.9
+openxlab==0.0.19
+ordered-set==4.1.0
+oss2==2.17.0
+packaging==23.1
+pandas==2.0.3
+Pillow==10.0.0
+platformdirs==3.10.0
+protobuf==4.24.4
+psutil==5.9.5
+pycocotools==2.0.7
+pycparser==2.21
+pycryptodome==3.18.0
+Pygments==2.16.1
+pyparsing==3.0.9
+PyQt5==5.15.10
+PyQt5-Qt5==5.15.2
+PyQt5-sip==12.13.0
+pyreadline3==3.4.1
+PySocks==1.7.1
+python-dateutil==2.8.2
+pytz==2023.3
+PyWavelets==1.4.1
+pywin32==306
+PyYAML==6.0.1
+QtPy==2.4.1
+regex==2023.8.8
+requests==2.28.2
+rich==13.4.2
+scikit-image==0.21.0
+scikit-learn==1.3.2
+scipy==1.10.1
+seaborn==0.13.2
+six==1.16.0
+soupsieve==2.5
+sympy==1.12
+tabulate==0.9.0
+termcolor==2.3.0
+terminaltables==3.1.10
+threadpoolctl==3.2.0
+tifffile==2023.7.10
+tomli==2.0.1
+torch==1.12.1+cu113
+torchaudio==0.12.1+cu113
+torchvision==0.13.1+cu113
+tqdm==4.65.2
+typing_extensions==4.7.1
+tzdata==2023.3
+urllib3==1.26.16
+Werkzeug @ file:///home/conda/feedstock_root/build_artifacts/werkzeug_1715000201436/work
+yapf==0.40.1
+zipp==3.16.2
