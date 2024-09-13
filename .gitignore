@@ -1,0 +1,4 @@
+backend/logs/
+backend/ImageRecognize/
+backend/services/latest.pth
+backend/uploads/

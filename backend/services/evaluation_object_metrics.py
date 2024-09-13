@@ -646,17 +646,16 @@ def image_statistical(img_path, pkl_path, out_path, statistical_mode='Double emu
         'single': 2,
         'double-i': 3, }
     id_to_classname = {v: k for k, v in classname_to_id.items()}
-    data_summary = pd.DataFrame()
-    # SystemExit path check
+    data_summary = pd.DataFrame(columns=['Variable name', 'Count', 'Average value', 'Standard Deviation',
+                                             'Variance', 'Min', '25%', '50%', '75%', 'Max', 'outlier'])
     try:
         assert os.path.exists(img_path)
         assert os.path.exists(pkl_path)
     except:
         print('please check the path')
         return
-    pkl_result = read_pkl(pkl_path, nms_flag=True, short_long_ratio_flag=False, short_long_ratio_threshold=0.6)
+    pkl_result = read_pkl(pkl_path, nms_flag=True, short_long_ratio_flag=False, short_long_ratio_threshold=0.8)
     pkl_result_pd = pd.DataFrame(pkl_result, columns=['image_id', 'category_id', 'bounding_box'])
-    print(pkl_result_pd)
     color_map = {1: (220, 20, 60), 2: (0, 0, 235), 3: (0, 0, 0)}
     img = cv2.imread(img_path)
     for i in range(len(pkl_result_pd)):
@@ -683,7 +682,7 @@ def image_statistical(img_path, pkl_path, out_path, statistical_mode='Double emu
             diameter_describe = data_describe(diameter_pd, 'single_diameter')
         # 将结果保存到data_summary
         data_summary = pd.concat([data_summary, diameter_describe], axis=0)
-
+        return data_summary
     elif statistical_mode == 'Double emulsion' or statistical_mode == 'Cell encapsulation' or statistical_mode == 'Single-cell encapsulation':
         pkl_result = read_pkl(pkl_path, nms_flag=True, short_long_ratio_flag=True, short_long_ratio_threshold=0.6)
         pkl_result = pd.DataFrame(pkl_result, columns=['image_id', 'category_id', 'bounding_box'])
@@ -843,13 +842,19 @@ def image_statistical(img_path, pkl_path, out_path, statistical_mode='Double emu
                         concentricity_describe,
                         core_to_shell_ratio_describe, volume_ratio_describe, core_num_describe, core_num_single_describe,
                         core_num_multi_describe]
+        print(data_summary)
         for i in range(len(summary_list)):
             if len(summary_list[i]) != 0:
                 data_summary = pd.concat([data_summary, summary_list[i]], axis=0)
+
         print('data_summary:', data_summary)
     else:
-        data_summary = None
+        print('statistical_mode is wrong')
+        print('statistical_mode:', statistical_mode)
+        data_summary = pd.DataFrame(columns=['Variable name', 'Count', 'Average value', 'Standard Deviation',
+                                             'Variance', 'Min', '25%', '50%', '75%', 'Max', 'outlier'])
     return data_summary
+
 
 
 def video_statistical(video_path, pkl_path, video_out_path, statistical_mode='Double emulsion', time_span=1,
@@ -1364,6 +1369,10 @@ def video_statistical(video_path, pkl_path, video_out_path, statistical_mode='Do
     image_id_unique = emulsion_img_single_sum_double['image_id'].unique()
     fps = cap.get(cv2.CAP_PROP_FPS)  # 获取视频的帧率
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))  # 获取视频的总帧数
+    image_height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)  # 获取视频的高度
+    font_size = int(image_height * (5 / 100))  # X为你希望字体占图片高度的百分比
+    font = ImageFont.truetype(font_path, font_size)
+    text_color = (255, 255, 255)
     frame_index = 0  # 初始化当前处理的帧编号
     pkl_result2 = read_pkl(pkl_path, nms_flag=True, short_long_ratio_flag=True, short_long_ratio_threshold=0.6)
     pkl_result2 = pd.DataFrame(pkl_result, columns=['image_id', 'category_id', 'bounding_box'])
@@ -1373,8 +1382,8 @@ def video_statistical(video_path, pkl_path, video_out_path, statistical_mode='Do
         text1 = 'Droplet with cell:'
         text2 = 'Droplet without cell:'
     elif statistical_mode == 'Single-cell encapsulated':
-        text1 = 'Droplet with single cell:'
-        text2 = 'Droplet without cell:'
+        text1 = 'Single-cell encapsulated:'
+        text2 = 'Others:'
     elif statistical_mode == 'Double emulsion':
         text1 = 'Double emulsion droplets:'
         text2 = 'Single droplets:'
@@ -1421,17 +1430,22 @@ def video_statistical(video_path, pkl_path, video_out_path, statistical_mode='Do
             # 添加文字
             img_pil = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
             draw = ImageDraw.Draw(img_pil)
-            font = ImageFont.truetype(font_path, 20)
+            bbox = draw.textbbox((0, 0), "Example text", font=font)
+            # 计算文字的宽度和高度
+            text_width = bbox[2] - bbox[0]  # right - left
+            text_height = bbox[3] - bbox[1]  # bottom - top
+            # 定义行间距百分比，例如行间距为文字高度的20%
+            line_spacing = int(text_height * 1.2)  # 增加20%的行间距
             if statistical_mode == 'Cell encapsulation':
                 double_sum_font = str(boxes_list_info['double_sum'].values[0])
                 single_sum_font = str(boxes_list_info['single_sum'].values[0])
-                draw.text((10, 10), text1 + double_sum_font, (0, 255, 0), font=font)
-                draw.text((10, 30), text2 + single_sum_font, (0, 255, 0), font=font)
+                draw.text((10, 10), text1 + double_sum_font, text_color, font=font)
+                draw.text((10, 10+line_spacing), text2 + single_sum_font, text_color, font=font)
             elif statistical_mode == 'Double emulsion':
                 double_sum_font = str(boxes_list_info['double_sum'].values[0])
                 single_sum_font = str(boxes_list_info['single_sum'].values[0])
-                draw.text((10, 10), text1 + double_sum_font, (0, 255, 0), font=font)
-                draw.text((10, 30), text2 + single_sum_font, (0, 255, 0), font=font)
+                draw.text((10, 10), text1 + double_sum_font, text_color, font=font)
+                draw.text((10, 10+line_spacing), text2 + single_sum_font, text_color, font=font)
             elif statistical_mode == 'Single-cell encapsulated':
                 double_sum_font = str(boxes_list_info['double_single_sum'].values[0])
                 single_sum_font = (float(boxes_list_info['single_sum'].values[0]) + float(boxes_list_info['double_sum'].values[0])
@@ -1439,13 +1453,13 @@ def video_statistical(video_path, pkl_path, video_out_path, statistical_mode='Do
                 # single_sum_font保留两位小数
                 single_sum_font = '%.2f' % single_sum_font
                 single_sum_font = str(single_sum_font)
-                draw.text((10, 10), text1 + double_sum_font, (0, 255, 0), font=font)
-                draw.text((10, 30), text2 + single_sum_font, (0, 255, 0), font=font)
+                draw.text((10, 10), text1 + double_sum_font, text_color, font=font)
+                draw.text((10, 10+line_spacing), text2 + single_sum_font, text_color, font=font)
             elif statistical_mode == 'Single droplet':
                 double_sum_font = str(boxes_list_info['double_sum'].values[0])
                 single_sum_font = str(boxes_list_info['single_sum'].values[0])
-                draw.text((10, 10), text2 + double_sum_font, (0, 255, 0), font=font)
-                draw.text((10, 10), text2 + single_sum_font, (0, 255, 0), font=font)
+                draw.text((10, 10), text2 + double_sum_font, text_color, font=font)
+                draw.text((10, 10+line_spacing), text2 + single_sum_font, text_color, font=font)
 
             frame = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
         elif frame_index in image_id_unique2:
@@ -1473,19 +1487,24 @@ def video_statistical(video_path, pkl_path, video_out_path, statistical_mode='Do
             # 添加文字
             img_pil = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
             draw = ImageDraw.Draw(img_pil)
-            font = ImageFont.truetype(font_path, 20)
+            bbox = draw.textbbox((0, 0), "Example text", font=font)
+            # 计算文字的宽度和高度
+            text_width = bbox[2] - bbox[0]  # right - left
+            text_height = bbox[3] - bbox[1]  # bottom - top
+            # 定义行间距百分比，例如行间距为文字高度的20%
+            line_spacing = int(text_height * 1.2)  # 增加20%的行间距
             if statistical_mode == 'Cell encapsulation':
-                draw.text((10, 10), text1 + double_sum_font, (0, 255, 0), font=font)
-                draw.text((10, 30), text2 + single_sum_font, (0, 255, 0), font=font)
+                draw.text((10, 10 ), text1 + double_sum_font, text_color, font=font)
+                draw.text((10, 10+ line_spacing), text2 + single_sum_font, text_color, font=font)
             elif statistical_mode == 'Double emulsion':
-                draw.text((10, 10), text1 + double_sum_font, (0, 255, 0), font=font)
-                draw.text((10, 30), text2 + single_sum_font, (0, 255, 0), font=font)
+                draw.text((10, 10), text1 + double_sum_font, text_color, font=font)
+                draw.text((10, 10 + line_spacing), text2 + single_sum_font, text_color, font=font)
             elif statistical_mode == 'Single-cell encapsulated':
-                draw.text((10, 10), text1 + double_sum_font, (0, 255, 0), font=font)
-                draw.text((10, 30), text2 + single_sum_font, (0, 255, 0), font=font)
+                draw.text((10, 10 ), text1 + double_sum_font, text_color, font=font)
+                draw.text((10, 10+ line_spacing), text2 + single_sum_font, text_color, font=font)
             elif statistical_mode == 'Single droplet':
-                draw.text((10, 10), text2 + double_sum_font, (0, 255, 0), font=font)
-                draw.text((10, 10), text2 + single_sum_font, (0, 255, 0), font=font)
+                draw.text((10, 10 ), text2 + double_sum_font, text_color, font=font)
+                draw.text((10, 10+ line_spacing), text2 + single_sum_font, text_color, font=font)
             frame = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
         # 将帧写入输出视频，即使该帧未处理
         out.write(frame)

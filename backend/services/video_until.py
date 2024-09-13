@@ -119,56 +119,87 @@ def video_recognition(video_path, out_dir,
             if results.iloc[i, -1] != None and len(results.iloc[i, -1]) > 0:
                 for k in range(len(results.iloc[i, -1])):
                     results.iloc[i, -1][k] = results.iloc[i, -1][k] * float(actual_size)
-    # 定义颜色和格式
-    boxprops = dict(color="blue", linewidth=2, facecolor='lightblue')  # 设置箱体的填充色
-    flierprops = dict(marker='o', color='red', alpha=0.5)  # 异常值的样式
-    medianprops = dict(color='green', linewidth=2)
-    whiskerprops = dict(color='black', linewidth=1.5)
-    capprops = dict(color='black', linewidth=1.5)
     image_names = []
-    # 绘制箱线图
     for index, row in results.iterrows():
-        mode_double = ['core_num', 'shell_diameter_' + actual_unit, 'core_diameter_' + actual_unit, 'single_diameter_' + actual_unit,
+        mode_double = ['core_num', 'shell_diameter_' + actual_unit, 'core_diameter_' + actual_unit,
+                       'single_diameter_' + actual_unit,
                        'concentricity', 'core_shell_ratio', 'volume_ratio']
         model_single = ['single_diameter_' + actual_unit]
-        if statistical_mode == 'Cell encapsulation' and row['Variable name'] in mode_double:
-                pass
-        elif statistical_mode == 'Single-cell encapsulated'and row['Variable name'] in mode_double:
-                pass
+        model_cell = ['shell_diameter_' + actual_unit]
+        if statistical_mode == 'Cell encapsulation' and row['Variable name'] in model_cell:
+            pass
+        elif statistical_mode == 'Single-cell encapsulated' and row['Variable name'] in model_cell:
+            pass
         elif statistical_mode == 'Double emulsion' and row['Variable name'] in mode_double:
-                pass
+            pass
         elif statistical_mode == 'Single droplet' and row['Variable name'] in model_single:
-                pass
+            pass
         else:
             continue
         # 如果count小于10，则不绘制箱线图
         if row['Count'] < 10:
             continue
+        # 如果25%和75%相等，则不绘制箱线图
+        if row['25%'] == row['75%']:
+            continue
+        # 一次性设置字体和图像属性
+        plt.rcParams['font.size'] = 18
+        plt.rcParams['font.family'] = 'Arial'
+        plt.rcParams['axes.titlesize'] = 20
+        plt.rcParams['axes.titleweight'] = 'bold'
+        plt.rcParams['xtick.labelsize'] = 20
+        plt.rcParams['ytick.labelsize'] = 20
+        # 定义颜色和格式
+        boxprops = dict(color="#0095FF", linewidth=0, facecolor='#ABC6E4')  # 设置箱体的填充色
+        medianprops = dict(color='#FFA500', linewidth=2, label='50% (Median)')
+        whiskerprops = dict(color='black', linewidth=2)  # 须线的样式
+        capprops = dict(color='black', linewidth=2)  # 顶端横线的样式
+        width = 0.4  # 箱体的宽度
+        # 均值线和分位线的样式
+        line_settings = [
+            {'key': 'Average value', 'color': '#32037D', 'linestyle': '--', 'label': 'Average value'},
+            {'key': '25%', 'color': '#008B00', 'linestyle': '-', 'label': '25%(Q1)'},
+            {'key': '75%', 'color': '#FF3030', 'linestyle': '-', 'label': '75%(Q3)'}
+        ]
         plt.figure(figsize=(10, 6))
         # 计算 IQR 和须线位置
         IQR = row['75%'] - row['25%']
         lower_whisker = max(row['Min'], row['25%'] - 1.5 * IQR)
         upper_whisker = min(row['Max'], row['75%'] + 1.5 * IQR)
-
         # 准备箱线图的数据
         box_data = [lower_whisker, row['25%'], row['50%'], row['75%'], upper_whisker]
-
+        label_name = row['Variable name']
+        values_unit = ''
+        if row['Variable name'][-3:] == '_' + actual_unit:
+            label_name = row['Variable name'][:-3]
+            values_unit = '(' + actual_unit + ')'
         # 绘制箱线图
         plt.boxplot(
             [box_data],
-            labels=[row['Variable name']],
-            boxprops=boxprops, flierprops=flierprops, medianprops=medianprops,
+            labels=[label_name],
+            widths=width,  # 设置箱体的宽度
+            boxprops=boxprops, medianprops=medianprops,
             whiskerprops=whiskerprops, capprops=capprops, patch_artist=True  # 启用填充颜色
         )
+        # 设置图形标题和标签（字体和大小已经一次性配置）
+        plt.title(f'Boxplot for {label_name}')
+        # 隐藏x轴的默认标签（例如数字1）
+        plt.xticks([])  # 移除x轴上的所有标签
+        plt.ylabel('Values ' + values_unit)
 
+
+        # 绘制与箱体一样长的平均值线Average value
+        x_start = 1 - width / 2  # 从箱体的左边开始
+        x_end = 1 + width / 2  # 到箱体的右边结束
+        for setting in line_settings:
+            if setting['key'] in row:
+                plt.hlines(y=row[setting['key']], xmin=x_start, xmax=x_end, colors=setting['color'],
+                           linestyles=setting['linestyle'], linewidth=2, label=setting['label'])
         # 绘制异常值
         if row['outlier'] is not None:
-            plt.scatter([1] * len(row['outlier']), row['outlier'], color='red', alpha=0.6, marker='o')
-
-        # 添加标题和标签
-        plt.title(f'Boxplot for {row["Variable name"]}', fontsize=14, fontweight='bold')
-        plt.xlabel('Variable', fontsize=12)
-        plt.ylabel('Values', fontsize=12)
+            plt.scatter([1] * len(row['outlier']), row['outlier'], color='red', alpha=0.6, marker='o', label='Outliers')
+        # 添加图例
+        plt.legend()
         if os.path.exists(out_dir + 'out/') == False:
             os.makedirs(out_dir + 'out/')
         plt.savefig(out_dir + 'out/' + row['Variable name'] + '.png')
